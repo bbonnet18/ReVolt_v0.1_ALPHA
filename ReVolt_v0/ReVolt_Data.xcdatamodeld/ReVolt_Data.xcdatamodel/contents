@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model name="" userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1171" systemVersion="11E53" minimumToolsVersion="Automatic" macOSVersion="Automatic" iOSVersion="Automatic">
+    <entity name="Build" representedClassName="Build" syncable="YES">
+        <attribute name="buildID" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="creationDate" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="status" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="buildItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="BuildItem" inverseName="build" inverseEntity="BuildItem" syncable="YES"/>
+        <relationship name="post" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Post" inverseName="build" inverseEntity="Post" syncable="YES"/>
+        <relationship name="response" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Response" inverseName="build" inverseEntity="Response" syncable="YES"/>
+    </entity>
+    <entity name="BuildItem" representedClassName="BuildItem" isAbstract="YES" syncable="YES">
+        <attribute name="creationDate" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="screenID" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="screenTitle" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="thumbnailPath" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="type" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="uploaded" optional="YES" attributeType="Boolean" syncable="YES"/>
+        <relationship name="build" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Build" inverseName="buildItems" inverseEntity="Build" syncable="YES"/>
+    </entity>
+    <entity name="Comment" representedClassName="Comment" syncable="YES">
+        <attribute name="author" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="id" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="text" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="response" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Response" inverseName="comments" inverseEntity="Response" syncable="YES"/>
+    </entity>
+    <entity name="Group" representedClassName="Group" syncable="YES">
+        <attribute name="active" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="category_id" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="date_created" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="group_description" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="id" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="leader" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="tags" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="posts" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Post" inverseName="group" inverseEntity="Post" syncable="YES"/>
+    </entity>
+    <entity name="Post" representedClassName="Post" syncable="YES">
+        <attribute name="author_id" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="date_created" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="id" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="media_url" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="post_description" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="status" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="tags" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="title" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="type" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="build" optional="YES" minCount="1" maxCount="1" deletionRule="Cascade" destinationEntity="Build" inverseName="post" inverseEntity="Build" syncable="YES"/>
+        <relationship name="group" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Group" inverseName="posts" inverseEntity="Group" syncable="YES"/>
+        <relationship name="responses" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Response" inverseName="post" inverseEntity="Response" syncable="YES"/>
+    </entity>
+    <entity name="Response" representedClassName="Response" syncable="YES">
+        <attribute name="author_id" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="date_created" attributeType="Date" syncable="YES"/>
+        <attribute name="id" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="status" attributeType="String" syncable="YES"/>
+        <attribute name="tags" attributeType="String" syncable="YES"/>
+        <attribute name="title" attributeType="String" syncable="YES"/>
+        <relationship name="build" optional="YES" minCount="1" maxCount="1" deletionRule="Cascade" destinationEntity="Build" inverseName="response" inverseEntity="Build" syncable="YES"/>
+        <relationship name="comments" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Comment" inverseName="response" inverseEntity="Comment" syncable="YES"/>
+        <relationship name="post" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Post" inverseName="responses" inverseEntity="Post" syncable="YES"/>
+    </entity>
+    <entity name="TextAndImageMO" representedClassName="TextAndImageMO" parentEntity="BuildItem" syncable="YES">
+        <attribute name="imagePath" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="screenText" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="TextAndVideoMO" representedClassName="TextAndVideoMO" parentEntity="BuildItem" syncable="YES">
+        <attribute name="screenText" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="thumbnailImage" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="videoPath" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="TextOnlyMO" representedClassName="TextOnlyMO" parentEntity="BuildItem" syncable="YES">
+        <attribute name="screenText" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="VideoOnlyMO" representedClassName="VideoOnlyMO" parentEntity="BuildItem" syncable="YES">
+        <attribute name="thumbnailImage" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="videoPath" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="Build" positionX="223" positionY="279" width="128" height="195"/>
+        <element name="BuildItem" positionX="261" positionY="0" width="128" height="150"/>
+        <element name="Comment" positionX="160" positionY="192" width="128" height="105"/>
+        <element name="Group" positionX="160" positionY="192" width="128" height="180"/>
+        <element name="Post" positionX="160" positionY="192" width="128" height="225"/>
+        <element name="Response" positionX="160" positionY="192" width="128" height="180"/>
+        <element name="TextAndImageMO" positionX="-36" positionY="180" width="128" height="75"/>
+        <element name="TextAndVideoMO" positionX="88" positionY="324" width="128" height="75"/>
+        <element name="TextOnlyMO" positionX="-63" positionY="54" width="128" height="60"/>
+        <element name="VideoOnlyMO" positionX="99" positionY="-144" width="128" height="60"/>
+    </elements>
+</model>

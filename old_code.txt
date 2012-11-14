@@ -1,0 +1,366 @@
+
+TextOnlyMO *_buildItem;
+}
+
+@property (strong, nonatomic) TextOnlyMO *buildItem;
+@property (strong, nonatomic) IBOutlet UITextView *screenText;
+
+
+//
+//  textOnly.m
+//  ReVolt_v0
+//
+//  Created by Ben Bonnet on 5/1/12.
+//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
+//
+
+#import "textOnly.h"
+#import "textAndAudio.h"
+#import "textAndImage.h"
+#import "textAndVideo.h"
+#import "videoOnly.h"
+#import "TemplateLoader.h"
+
+
+@implementation textOnly
+@synthesize buildItem = _buildItem;
+@synthesize screenText;
+
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+    self.screenText = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    return (interfaceOrientation == UIInterfaceOrientationPortrait  && interfaceOrientation == UIInterfaceOrientationLandscapeLeft);
+}
+
+- (NSString*)takeScreenShot{
+    
+    if(self.buildItem.thumbnailPath != @""){//this one has a thumbnail already, so delete it
+        NSError *error;
+        NSFileManager *mgr = [NSFileManager defaultManager];
+        if ([mgr removeItemAtPath:self.buildItem.thumbnailPath error:&error] != YES)
+            NSLog(@"Unable to delete file: %@", [error localizedDescription]);
+    }
+    
+    NSString* UUID = [self GetUUID];
+    if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)])
+        UIGraphicsBeginImageContextWithOptions(self.view.bounds.size, NO, 0.5);
+    
+    [self.view.layer renderInContext:UIGraphicsGetCurrentContext()];
+    UIImage *viewImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    NSString *imageName = [NSString stringWithFormat:@"screen_%@",UUID];
+    NSString *path = [NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/%@.jpg",imageName]];
+    NSURL *url = [NSURL fileURLWithPath:path];
+    [UIImageJPEGRepresentation(viewImage, 0.75f) writeToURL:url atomically:YES];
+    return path;
+}
+
+- (IBAction)save:(id)sender{
+    
+    self.buildItem.screenTitle = self.titleTxt.text;
+    self.buildItem.screenText = self.screenText.text;
+    self.buildItem.thumbnailPath = [self takeScreenShot];
+    
+    [self.delegate updateBuildItem:self.buildItem];// call to the delegate to tell the delegate to update the buildItem  with the properties the user created here
+    
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+- (IBAction)cancel:(id)sender{
+    [self.delegate userDidCancelFromEditor:self.buildItem];
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+- (IBAction)deleteBuildItem:(id)sender{
+    [self.delegate deleteBuildItem:self.buildItem];
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+
+- (void) populateItems{
+    self.buildItem = (TextOnlyMO*)self.buildItem;
+
+    self.titleTxt.text = self.buildItem.screenTitle;
+    self.screenText.text = self.buildItem.screenText;
+    
+}
+
+
+
+@end
+
+
+NSDictionary* info = [note userInfo];
+    CGSize kbSize = [[info objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
+    
+    UIEdgeInsets contentInsets = UIEdgeInsetsMake(0.0, 0.0, kbSize.height, 0.0);
+    self.scrollerView.contentInset = contentInsets;
+    self.scrollerView.scrollIndicatorInsets = contentInsets;
+    
+    // If active text field is hidden by keyboard, scroll it so it's visible
+    // Your application might not need or want this behavior.
+    CGRect aRect = self.view.frame;
+    aRect.size.height -= kbSize.height;
+    if (!CGRectContainsPoint(aRect, self.activeView.frame.origin) ) {
+        CGPoint scrollPoint = CGPointMake(0.0, self.activeView.frame.origin.y-kbSize.height);
+        [self.scrollerView setContentOffset:scrollPoint animated:YES];
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[self.lib writeImageToSavedPhotosAlbum:[editedImage CGImage] orientation:UIDeviceOrientationPortrait completionBlock:^(NSURL *assetURL, NSError *error) {
+                
+                
+                
+                if(!error){
+                    self.buildItem.imagePath = [assetURL path];
+                    NSLog(@"the new image path is: %@",self.buildItem.imagePath);
+                    // now need to find a way to cast and change the object to the right TextAndImageMO object
+                }else{
+                    // error, react accordingly
+                }
+                
+                
+            }];
+           
+        if([mediaType isEqualToString:(NSString *)kUTTypeImage]){
+            NSString *moviePath = [[info objectForKey:UIImagePickerControllerMediaURL]path];
+
+
+
+
+- (void) buildThumbnail2{
+    
+    NSString *testString = @"test";
+    
+//    Float64 durationSeconds = CMTimeGetSeconds([video duration]);
+//    CMTime startPoint = CMTimeMake(durationSeconds/2.0,600);
+//    CMTime actualTime;
+//    NSError *error = nil;
+//    
+//    AVAssetImageGenerator *imageGenerator = [[AVAssetImageGenerator alloc] initWithAsset:video];
+//
+//    
+//    
+//    CGImageRef halfWayImage = [imageGenerator copyCGImageAtTime:startPoint actualTime:&actualTime error:&error];
+//    
+//    
+//    
+//    if(halfWayImage != NULL){
+//        NSString *actualTimeString = (__bridge NSString*)CMTimeCopyDescription(NULL, actualTime);
+//        NSString *requestedTimeString = (__bridge NSString*)CMTimeCopyDescription(NULL, startPoint);
+//        NSLog(@"requested time %@, actual time%@", requestedTimeString, actualTimeString);
+//    }
+
+
+}
+
+
+
+- (void) buildThumbNail:(NSURL*)videoURL{
+    
+    MPMoviePlayerController *mp = [[MPMoviePlayerController alloc] 
+                                   initWithContentURL:self.vidAssetURL];
+    self.mp = mp;
+    
+    if(self.mp != nil){
+        self.mp.scalingMode = MPMovieScalingModeAspectFit;
+        
+        UIView *playerView = self.mp.view;
+        [self.view addSubview:playerView];
+        [self.mp play];
+        [self.mp setFullscreen:YES animated:YES];
+        // get the thumbnail
+        UIImage *thumbnail = [mp thumbnailImageAtTime:1
+                                           timeOption:MPMovieTimeOptionExact];
+        
+       
+        NSString *thumbName = [NSString stringWithFormat:@"videoThumb_%@",[self GetUUID]];
+        NSString *path = [NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/%@.jpg",thumbName]];
+        self.buildItem.thumbnailImage = path;
+        
+        NSURL *url = [NSURL fileURLWithPath:path];
+        [UIImageJPEGRepresentation(thumbnail, 0.75f) writeToURL:url atomically:YES];
+        UIImage *thumb = [UIImage imageWithContentsOfFile:self.buildItem.thumbnailImage];
+        
+        self.imageView.image = thumb;
+    }else{
+        NSLog(@"failed to instantiate the moviePlayer");
+    }
+    
+    
+    
+//    mp.initialPlaybackTime = 1;
+//    mp.currentPlaybackTime = 1;
+    
+    
+
+}
+
+// this method conforms to the method specified by the completion selector argument of the UIImageWriteToSavedPhotosAlbum method above - that method is part of UIKit functions and named in the UIImage class
+-(void) image:(UIImage *)image finishedSavingWithError:(NSError *) error contextInfo:(void *)contextInfo{
+    if(image){
+        
+    }
+    if(error){// if there was an error, show an alert message and allow the user to cancel that
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Save Failed" message:@"Failed to save image" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+        [alertView show];
+    }
+}
+
+
+
+
+    AVAssetImageGeneratorCompletionHandler handler = ^(CMTime requestedTime, CGImageRef im, CMTime actualTime, AVAssetImageGeneratorResult result, NSError *error){
+        if (result != AVAssetImageGeneratorSucceeded) {
+            NSLog(@"couldn't generate thumbnail, error:%@", error);
+        }
+    };
+    
+
+NSError *error = nil;
+        CMTime actualTime;
+        
+        
+        
+        CGImageRef halfWayImage = [imageGenerator copyCGImageAtTime:startPoint actualTime:&actualTime error:&error];
+        
+        UIImage *testImage = [UIImage imageWithCGImage:halfWayImage];
+        
+        if (halfWayImage != NULL) {
+            
+//            NSString *actualTimeString = (__bridge NSString *)CMTimeCopyDescription(NULL, actualTime);
+//            NSString *requestedTimeString = (__bridge NSString *)CMTimeCopyDescription(NULL, midpoint);
+//            NSLog(@"got halfWayImage: Asked for %@, got %@", requestedTimeString, actualTimeString);
+//            // Do something interesting with the image.
+//            CGImageRelease(halfWayImage);
+        }else{
+            NSLog(@"image didn't take!!!!!!!!");
+        }
+
+
+
+
+
+self.buildItem.videoPath = [assetURL path];
+                
+                NSURL *newVidURL = [NSURL URLWithString:[assetURL path]];
+                
+                self.mp = [[MPMoviePlayerController alloc] initWithContentURL:newVidURL];
+//                
+//                NSNumber *requestTime = [NSNumber numberWithFloat:1.0f];// request time
+//                NSArray *thumbRequestTimes = [NSArray arrayWithObject:requestTime];
+//                [self.mp requestThumbnailImagesAtTimes:thumbRequestTimes timeOption:MPMovieTimeOptionExact];
+                UIImage *thumb = [self.mp thumbnailImageAtTime:1.0 timeOption:MPMovieTimeOptionExact];
+                
+                NSString *imageName = @"newIMAGE";
+                NSString *path = [NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/%@.png",imageName]];
+                NSURL *url = [NSURL URLWithString:path];
+                self.buildItem.thumbnailImage = path;
+                //self.imageView.image = thumb;
+                [UIImageJPEGRepresentation(thumb, 0.50f) writeToURL:url atomically:YES];
+                
+                self.mp = nil;// set mp to nil so it's not holding the references
+//                dispatch_async(kBgQueue, ^(void){
+//                    
+//                    self.buildItem.thumbnailPath = [self buildThumbNail:assetURL];
+//                    
+//                });
+
+
+
+- (void) thumbnailRequestFinished:(NSNotification*)notifiation{
+   
+    MPMoviePlayerController *controller = [notifiation object];
+    
+    if(controller != nil && [controller isEqual:self.mp]){
+        NSLog(@"thumb is available");
+        UIImage *thumb = [notifiation.userInfo objectForKey:MPMoviePlayerThumbnailImageKey];
+        self.imageView.image = thumb;
+        
+    }
+    
+    NSError *error = [[notifiation userInfo] objectForKey:MPMoviePlayerThumbnailErrorKey];
+    
+    if(error == nil){// no error, so save
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
+            NSDictionary *info = [notifiation userInfo];
+            UIImage *thumbImage = [info objectForKey:MPMoviePlayerThumbnailImageKey];
+            self.imageView.image = thumbImage;
+            
+            NSString *imageName = [NSString stringWithFormat:@"screen_%@",@"thumbImage"];
+            NSString *path = [NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/%@.png",imageName]];
+            NSURL *url = [NSURL fileURLWithPath:path];
+            self.buildItem.thumbnailImage = path;
+            [UIImageJPEGRepresentation(thumbImage, 0.50f) writeToURL:url atomically:YES];
+            
+            self.mp = nil;// set mp to nil so it's not holding the references
+            
+            //}
+            [self.indicator stopAnimating];
+        });
+
+    }
+//    
+//    NSString *failureReason = [error localizedFailureReason];
+//    NSString *suggestion = [error localizedRecoverySuggestion];
+//    NSString *other = [error localizedDescription];
+//    
+    //if([info objectForKey:MPMoviePlayerThumbnailImageKey]){
+            
+}
+
+ [self.lib assetForURL:assetURL resultBlock:^(ALAsset *asset) {
+                    NSDictionary *urls = [asset valueForProperty:ALAssetPropertyURLs];
+                    NSArray *keys = [urls allKeys];
+                    
+                    [keys enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+                       NSString *prop = obj; 
+                       NSString *test = @"test";
+                    }];
+                    
+                } failureBlock:^(NSError *error) {
+                    if(error != nil){
+                        NSLog(@"error happened when attempting to retrieve object %@", [error localizedDescription]);
+                    }
+                }];
+

@@ -1,0 +1,37 @@
+//--- SOME OR ALL OF THESE DICTIONARY ITEMS MAY NEED TO BE MUTABLE ---\\
+
+- (void) addBuildToBuildsArray:(Build*) newBuild;
+
+// All of these will reference the current build, which is noted in the currentBuild instance variable 
+- (Build*) getBuild:(NSString*) buildName;// returns a build object representing a build 
+
+- (Build*) getCurrentBuild;// returns the current build, that is the build that is set to the currentBuild iVar
+
+- (void) addBuildItem:(BuildItem*) buildItem;// adds a build to the builds mutable array
+
+- (BuildItem*) getCurrentItem;// this will get the current item for editing
+
+
+- (NSUInteger) getCurrentItemIndex;
+
+- (void) setCurrentItem: (BuildItem*)item;// sets the currentItem ivar, the item that we are currently editing
+
+- (NSSet*) getBuildItems; // this method will return all the buildItems for the current build; 
+
+
+- (BuildItem*) getBuildItemByName:(NSString*) buildName;// retrieves a build item dictionary object by finding the name of the build item, each build item will have a unique name value 
+- (void) setBuildItem:(BuildItem*) buildItem byName:(NSString*)buildName;// supplies a build item and that item replaces the item who's name is supplied
+
+- (void) deleteBuildByID:(NSInteger) buildID;// this will delete an entire build object in the builds mutable array, based on it's index
+
+
+- (NSSet *) getAllBuilds;// returns all the builds in the builds array
+
+- (void) setCurrentBuildByName:(NSString *)current;// sets the currentBuild iVar to the 
+// build that's chosen to edit, view uploads, etc. 
+- (NSUInteger) getCurrentBuildIndex;// gets the index of the current build
+- (void) addItemsToUploadObjects:(NSMutableArray*) mediaItems;// this is the method that will be used at the end of every 'edit operation'. When the user decides that they will commit the changes to the upload objects area, this will add an item to the uploadObjects array. The item that it add is an NSMutableDictionary and it will have all the media objects inside of it so they can be uploaded
+
+- (NSArray*) getUploadObjectsAtIndex:(NSUInteger)uploadIndex;// returns the array of media items that correspond to the index in the uploadObjects array
+- (NSArray*) getBuildTypes;// returns the types of buildItems available
+- (BOOL) isNewItem;// returns the value of the isNewItem

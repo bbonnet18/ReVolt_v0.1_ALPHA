@@ -1,0 +1,32 @@
+self.currentBuildItems = [NSMutableArray arrayWithArray:[[thisBuild buildItems] allObjects]];
+    
+    
+       
+    for(int i=0; i<[self.currentBuildItems count]; i++){
+        NSLog(@"x:%f i:%d",x,i);
+        
+        UIButton *btn = [[UIButton alloc] initWithFrame:CGRectMake(x, 10, 120, 100)];
+        [btn setImage:fullIcon forState:UIControlStateNormal];
+        [btn addTarget:self action:@selector(handleImageTapped:) forControlEvents:UIControlEventTouchUpInside];
+        btn.tag = i;
+        [self.scroller addSubview:btn];
+        
+        x += btn.bounds.size.width +10;
+        //icon.userInteractionEnabled = YES;
+    }
+    // add the tapToAdd image to the end
+    UIButton *tap = [[UIButton alloc] initWithFrame:CGRectMake(x, 10, 120, 100)];
+    [tap setImage:emptyIcon forState:UIControlStateNormal];
+    [tap addTarget:self action:@selector(handleImageTapped:) forControlEvents:UIControlEventTouchUpInside];
+    
+    tap.tag = [self.currentBuildItems count];
+    
+    x += tap.bounds.size.width +10;
+
+    [self.scroller addSubview:tap];
+    
+    CGSize sz = self.scroller.bounds.size;
+    sz.width = x;
+    sz.height = 200;
+    
+    self.scroller.contentSize = sz;

@@ -1,0 +1,463 @@
+///
+//  BuildMainEditScreen.m
+//  ReVolt_v0
+//
+//  Created by Lauren Bonnet on 2/23/12.
+//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
+// 
+/*  
+ 
+ this and all other editor classes will follow the same pattern. Each uses the item editor delegate to pass BuildItems to the delegate and receive them from the delegate when the editor loads. Each editor provides the ability for the the user to choose a different editor to replace this one. If the user chooses a new editor, the BuildItem for this editor is never saved and is actually deleted from the BuildItems set and a new BuildItem is added for the new editor. 
+ 
+ */
+
+#import "BuildMainEditScreen.h"
+#import "textAndAudio.h"
+#import "textAndImage.h"
+#import "textAndVideo.h"
+#import "textOnly.h"
+#import "audioOnly.h"
+#import "videoOnly.h"
+#import "TemplateLoader.h"
+#import "TextAndImageMO.h"
+#import "TextAndAudioMO.h"
+#import "TextAndVideoMO.h"
+#import "VideoOnlyMO.h"
+
+
+@implementation BuildMainEditScreen
+
+
+@synthesize saveBtn;
+@synthesize publishBtn;
+@synthesize scroller;
+@synthesize rightBtn;
+@synthesize leftBtn;
+@synthesize pageControl = _pageControl;
+@synthesize delegate = _delegate;
+@synthesize currentBuildItems = _currentBuildItems;
+@synthesize buildItemIndex = _buildItemIndex;
+@synthesize tempLoader = _tempLoader;
+@synthesize context = _context;
+@synthesize currentBuild = _currentBuild;
+@synthesize currentBuildItemType = _currentBuildItemType;
+@synthesize buildItemImages = _buildItemImages;
+@synthesize pageViews = _pageViews;
+@synthesize isNewItem = _isNewItem;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleItemChanges:) name:NSManagedObjectContextObjectsDidChangeNotification object:self.context];
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+
+#pragma mark - handleItemChanges
+
+- (void) handleItemChanges:(NSNotification*)notification{
+    
+    //triggered anytime data is updated on the object or any of the subobjects, even on the items passed to the ItemEditors
+
+    NSSet* insertedObjects = [[notification userInfo]
+                                objectForKey:NSInsertedObjectsKey] ;
+    NSSet* deletedObjects = [[notification userInfo]
+                               objectForKey:NSDeletedObjectsKey] ;
+    NSSet* updatedObjects = [[notification userInfo]
+                               objectForKey:NSUpdatedObjectsKey] ;
+    if([updatedObjects count] > 0){
+        // there are items to be updated. 
+        NSArray *test = [updatedObjects allObjects];
+        
+        for (int i=0; i< [test count ]; i++){
+            if([[test objectAtIndex:i] isKindOfClass:[BuildItem class]]){
+                
+                Class c = [[test objectAtIndex:i] class];
+                NSString* className = NSStringFromClass(c);
+                NSString* test = @"test";
+            }
+           /*this will return a BuildItem and a Build if both are updated*/ 
+        }
+    }
+
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    self.tempLoader = [[TemplateLoader alloc] init];
+    self.tempLoader.templateType = @"template";
+    self.buildItemImages = [[NSMutableArray alloc] init];
+    self.pageViews = [[NSMutableArray alloc] init];
+    [self loadBuild];
+    
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [self setSaveBtn:nil];
+    [self setPublishBtn:nil];
+    [self setScroller:nil];
+    [self setRightBtn:nil];
+    [self setLeftBtn:nil];
+    
+    [self setPageControl:nil];
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (void)viewWillAppear:(BOOL)animated{
+    [self.navigationController setNavigationBarHidden:NO animated:YES];
+    [self.navigationController setToolbarHidden:YES animated:YES];
+    [self setBuildItems];
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait || interfaceOrientation == UIInterfaceOrientationLandscapeLeft);
+}
+
+- (IBAction)goLeft:(id)sender{
+    
+    
+}
+
+- (IBAction)goRight:(id)sender{
+    
+    
+}
+// reacts to the 
+- (IBAction)handleButtonTapped:(id)sender{
+    
+    UIButton* b = (UIButton*)sender;// get the button that was tapped
+    NSInteger imageTag = b.tag;// use the image tag to 
+    self.buildItemIndex = imageTag;
+    
+    //NSMutableDictionary *item; 
+    if(imageTag != [self.currentBuildItems count]){// if this is not the last one (or zero), then it already has an object 
+        // if this is not a new one, set the currentItemIndex to this number
+        self.isNewItem = NO;
+        BuildItem *item = [self.currentBuildItems objectAtIndex:imageTag];
+        // get the proper type
+        
+        NSString *buildType = item.type;
+        self.currentBuildItemType = buildType;
+        ItemEditor *vc = [self.tempLoader loadEditor:[self buildTypeToEditorType:buildType] withDelegate:self];
+        [self.navigationController pushViewController:vc animated:YES];
+        [self.navigationController setNavigationBarHidden:YES animated:YES];
+    }else{// if this is the last item, it will mean that it's a new item
+        
+        TemplatePicker *template = [[TemplatePicker alloc] initWithNibName:@"TemplatePicker" bundle:[NSBundle mainBundle]];
+        template.delegate = self;        
+       
+        [self presentViewController:template animated:YES completion:^(void){
+            // add in some post view showing stuff here, executes when the view is loaded and animated in
+            
+        }];
+    }
+    
+    
+}
+
+- (void) loadBuild{
+    
+    NSEntityDescription *entityDescription = [NSEntityDescription entityForName:@"Build" inManagedObjectContext:self.context];
+    
+    NSFetchRequest *request = [[NSFetchRequest alloc] init];
+    [request setEntity:entityDescription];
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"buildID == %@",[self.delegate getCurrentBuildID]];
+    [request setPredicate:predicate];
+    NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"name" ascending:NO];
+    [request setSortDescriptors:[NSArray arrayWithObject:sortDescriptor]];
+    
+    NSError *error = nil;
+    
+    NSArray *results = [self.context executeFetchRequest:request error:&error];
+  
+    self.currentBuild = [results objectAtIndex:0];
+    
+}
+// This method needs to account for the id's of the items as they are added and subtracted. 
+- (void) setBuildItems{
+    // remove all items from the superview
+    if([[self.scroller subviews] count] > 0){
+        [[self.scroller subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
+
+    }
+    
+    [self.buildItemImages removeAllObjects];// removes all the images so they can be reloaded based on changes
+    
+    // get all the items in the build
+    self.currentBuildItems = [NSMutableArray arrayWithArray:[[self.currentBuild buildItems] allObjects]];
+    
+    
+    CGFloat x = 10;// the gap for each spacer in the items array as we load; 
+    // add each item to the scroller 
+    for(int i=0; i<[self.currentBuildItems count]; i++){
+       
+        BuildItem* bi = [self.currentBuildItems objectAtIndex:i];
+        NSNumber *bID = [NSNumber numberWithInt:i];
+        bi.screenID = bID;// set the BuildItem's screenID property to the sequence within the build's order
+        UIButton *btn = [[UIButton alloc] initWithFrame:CGRectMake(x, 10, 100, 130)];
+        NSString *iconPath = bi.thumbnailPath;
+        UIImage *icon = [[UIImage alloc] initWithContentsOfFile:iconPath];
+        [btn setImage:icon forState:UIControlStateNormal];
+        [btn addTarget:self action:@selector(handleButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
+        btn.tag = i;
+        [self.scroller addSubview:btn];
+        
+        x += btn.bounds.size.width +10;
+        
+        // add to the buildItemImages array
+       // [self.buildItemImages addObject:btn];
+        
+       // [self.pageViews addObject:[NSNull null]];// this makes a placeholder 
+
+    }
+    // paging
+    self.pageControl.currentPage = 0;
+    self.pageControl.numberOfPages = [self.currentBuildItems count];
+    
+    // add the tapToAdd image to the end
+    UIButton *tap = [[UIButton alloc] initWithFrame:CGRectMake(x, 10, 100, 130)];
+    //[tap setImage:emptyIcon forState:UIControlStateNormal];
+    [tap setTitle:@"Tap to Add" forState:UIControlStateNormal];
+    [tap setBackgroundColor:[UIColor grayColor]];
+    [tap addTarget:self action:@selector(handleButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
+    
+    tap.tag = [self.currentBuildItems count];
+    
+    x += tap.bounds.size.width +10;
+   
+    [self.scroller addSubview:tap];
+    
+    CGSize sz = self.scroller.bounds.size;
+    sz.width = x;
+    sz.height = 200;
+    
+    self.scroller.contentSize = sz;
+   // [self changePageScrollSize];// to account for the size of the images, etc.
+    
+   // [self loadVisiblePages];
+}
+
+- (void) changePageScrollSize{
+    CGSize pagesScrollViewSize = self.scroller.frame.size;
+    self.scroller.contentSize = CGSizeMake(pagesScrollViewSize.width * self.buildItemImages.count, pagesScrollViewSize.height);
+}
+
+
+- (void) loadPage:(NSInteger)page{
+    if(page < 0 || page >= self.buildItemImages.count){
+        return;
+    }
+    
+    UIView *pageView = [self.pageViews objectAtIndex:page];
+    if((NSNull*) pageView == [NSNull null]){
+        CGRect frame = self.scroller.bounds;
+        frame.origin.x = frame.size.width * page;
+        frame.origin.y = 0.0f;
+        
+        UIButton *newPageButton = [self.buildItemImages objectAtIndex:page];
+        newPageButton.contentMode = UIViewContentModeScaleAspectFit;
+        newPageButton.frame = frame;
+        
+        [self.scroller addSubview:newPageButton];
+        [self.pageViews replaceObjectAtIndex:page withObject:newPageButton];
+    }
+    
+}
+
+- (void) purgePage:(NSInteger)page{// remove by replacing it with a null value
+    if(page <0 || page >= self.buildItemImages.count){
+        return;
+        
+    }
+    
+    UIView *pageView = [self.pageViews objectAtIndex:page];
+    if((NSNull *) pageView != [NSNull null]){
+        [pageView removeFromSuperview];
+        [self.pageViews replaceObjectAtIndex:page withObject:[NSNull null]];
+    }
+}
+#pragma mark - ItemEditor protocol methods
+
+
+- (void) updateBuildItem:(BuildItem *)updatedItem{
+    NSLog(@"id***** %@",updatedItem.screenID);
+    if(!self.isNewItem){
+        BuildItem *bi = [self.currentBuildItems objectAtIndex:self.buildItemIndex];
+        [self deleteBuildItem:bi];
+        [self.currentBuild addBuildItemsObject:updatedItem];
+        
+    }else{
+        [self.currentBuild addBuildItemsObject:updatedItem];
+    }
+    
+    NSError *error;
+    if(![self.context save:&error])
+        NSLog(@"%@", [error localizedFailureReason]);
+}
+
+- (void) deleteBuildItem:(BuildItem *)buildToDelete{
+    // get the current build id for this object 
+    // get the BuildItem by screenID and then delete it. This will only be called from the 
+    [self.currentBuild removeBuildItemsObject:buildToDelete];
+    
+    NSError *error;
+    if(![self.context save:&error])
+        NSLog(@"%@", [error localizedFailureReason]);
+    
+    
+    
+}
+
+- (BuildItem*) loadBuildItem{// check to see if it's not the end build, if not, it has already been built and we return that object. If it's the last one, we generate a new object and return it
+    if(self.buildItemIndex != [self.currentBuildItems count]){// if it's not the last item, then it's been created before
+        BuildItem* bi = [self.currentBuildItems objectAtIndex:self.buildItemIndex];// get the type so we can compare
+        if(![bi.type isEqualToString:self.currentBuildItemType]){// if the types are not the same, then it means the type has been changed, so return a new object for the template
+            [self deleteBuildItem:bi];// delete the old item 
+            
+            return [self buildItemFromType:self.currentBuildItemType];
+        }else{// if the items are the same, then return the same object, user can edit it
+            return [self.currentBuildItems objectAtIndex:self.buildItemIndex];
+        }
+        
+    }else{
+        return [self buildItemFromType:self.currentBuildItemType];// it's a new object, return a new item 
+    }
+}
+
+- (void) setCurrentItemTypeString:(NSString *)itemType{// called from the editors
+    self.currentBuildItemType = [self templateTypeToItemType:itemType];
+}
+
+- (BOOL) buildItemIsNew{
+    
+    return self.isNewItem; 
+}
+
+#pragma mark - templateTypeToBuildItemType  and buildItemFromType
+
+- (NSString*) templateTypeToItemType:(NSString *)templateType{
+    
+    if([templateType isEqualToString: @"Text And Image"]){
+        return @"TextAndImageMO";
+    }else if([templateType isEqualToString: @"Text And Video"]){
+        return @"TextAndVideoMO";
+    }else if([templateType isEqualToString: @"Text And Audio"]){
+        return @"TextAndAudioMO";
+    }else if([templateType isEqualToString: @"Video Only"]){
+        return @"VideoOnlyMO";
+    }else{// default to text and image
+        return @"UNKNOWN";
+    }
+}
+
+- (NSString*) buildTypeToEditorType:(NSString *)buildType{
+    if([buildType isEqualToString: @"TextAndImageMO"]){
+        return @"Text And Image";
+    }else if([buildType isEqualToString: @"TextAndVideoMO"]){
+        return @"Text And Video";
+    }else if([buildType isEqualToString: @"TextAndAudioMO"]){
+        return @"Text And Audio";
+    }else if([buildType isEqualToString: @"VideoOnlyMO"]){
+        return @"Video Only";
+    }else{// default to text and image
+        return @"UNKNOWN";
+    }
+
+}
+
+- (BuildItem*) buildItemFromType:(NSString *)itemType{// inserts the object but doesn't save it until updateBuildItem is called
+    if([self.currentBuildItemType isEqualToString:@"TextAndImageMO"]){
+        TextAndImageMO *t = (TextAndImageMO*)
+        [NSEntityDescription insertNewObjectForEntityForName:@"TextAndImageMO" inManagedObjectContext:self.context];
+        t.screenTitle = @"give us some title";
+        t.screenText = @"Some new Ben text";
+        t.creationDate = [NSDate date];
+        t.type = @"TextAndAudioMO";
+        t.screenID = [NSNumber numberWithInt:self.buildItemIndex];
+        return t;
+    }else if([self.currentBuildItemType isEqualToString:@"TextAndVideoMO"]){
+        TextAndVideoMO *t = (TextAndVideoMO*)
+        [NSEntityDescription insertNewObjectForEntityForName:@"TextAndVideoMO" inManagedObjectContext:self.context];
+        t.screenTitle = @"give us some title";
+        t.screenText = @"Some new Ben text";
+        t.creationDate = [NSDate date];
+        t.type = @"TextAndAudioMO";
+        t.screenID = [NSNumber numberWithInt:self.buildItemIndex];
+        return t;
+    }else if([self.currentBuildItemType isEqualToString:@"TextAndAudioMO"]){
+        TextAndAudioMO *t = (TextAndAudioMO*)
+        [NSEntityDescription insertNewObjectForEntityForName:@"TextAndAudioMO" inManagedObjectContext:self.context];
+        t.screenTitle = @"give us some title";
+        t.screenText = @"Some new Ben text";
+        t.creationDate = [NSDate date];
+        t.type = @"TextAndAudioMO";
+        t.screenID = [NSNumber numberWithInt:self.buildItemIndex];
+        return t;
+    }else if([self.currentBuildItemType isEqualToString:@"VideoOnlyMO"]){
+        VideoOnlyMO *t = (VideoOnlyMO*)
+        [NSEntityDescription insertNewObjectForEntityForName:@"VideoOnlyMO" inManagedObjectContext:self.context];
+        t.screenTitle = @"give us some title";
+        t.creationDate = [NSDate date];
+        t.type = @"TextAndAudioMO";
+        t.screenID = [NSNumber numberWithInt:self.buildItemIndex];
+        return t;
+    }else{
+        TextAndImageMO *t = (TextAndImageMO*)
+        [NSEntityDescription insertNewObjectForEntityForName:@"TextAndImageMO" inManagedObjectContext:self.context];
+        t.screenTitle = @"give us some title";
+        t.screenText = @"Some new Ben text";
+        t.creationDate = [NSDate date];
+        t.type = @"TextAndAudioMO";
+        t.screenID = [NSNumber numberWithInt:self.buildItemIndex];
+        return t;
+    }
+
+}
+
+
+#pragma mark - TemplatePickerDelegate methods
+
+- (void) didChooseTemplate:(NSString *)templateType{
+    
+    // this is done within a block and it it waits until the animation completes to show the new editor
+    [self dismissViewControllerAnimated:YES completion:^{
+        self.isNewItem = YES;
+        self.currentBuildItemType = [self templateTypeToItemType:templateType];
+        ItemEditor *templateChosen = [self.tempLoader loadEditor:templateType withDelegate:self];
+        [self.navigationController pushViewController:templateChosen animated:YES];
+        [self.navigationController setNavigationBarHidden:YES animated:YES];
+
+    }];
+}
+
+- (void) userDidCancel{
+    [self dismissModalViewControllerAnimated:YES];
+}
+    
+#pragma mark UIAlertViewDelegate methods
+
+
+
+
+@end

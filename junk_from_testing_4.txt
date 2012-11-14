@@ -1,0 +1,201 @@
+//
+//  textOnly.m
+//  ReVolt_v0
+//
+//  Created by Lauren Bonnet on 2/25/12.
+//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
+//
+
+#import "textOnly.h"
+
+
+
+@implementation textOnly
+
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    
+    
+    
+        // register to receive notification of keyboard so we can set things within the view to the level of the keyboard on the screen
+    //
+//    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showKeyboard:) name:UIKeyboardDidShowNotification object:nil];
+//    
+//    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(hideKeyboard:) name:UIKeyboardWillHideNotification object:nil];
+   
+}
+
+- (void)viewDidUnload
+{
+    
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+
+#pragma mark - textField delegate methods
+
+//-(void) textFieldDidEndEditing:(UITextField *)textField{
+//    if(textField == self.titleTxt){
+//        [textField resignFirstResponder];
+//    }
+//}
+//
+//-(void) textFieldDidBeginEditing:(UITextField *)textField{
+//    activeField = textField;// assign private variable the value of the textField
+//    self.didMakeChanges = YES;// set the boolean to make sure we know things changed and can save before returning 
+//    
+//}
+//
+//-(BOOL) textFieldShouldReturn:(UITextField *)textField{
+//    if(textField == self.titleTxt)
+//    {
+//        [textField resignFirstResponder];
+//    }
+//    
+//    return YES;
+//}
+
+
+#pragma mark UITextViewDelegate methods
+//-(void) textViewDidChange:(UITextView *)textView{
+//    self.didMakeChanges = YES;
+//}
+//
+//-(void) textViewDidBeginEditing:(UITextView *)textView{
+//    
+//    
+//}
+//
+//-(void) textViewDidEndEditing:(UITextView *)textView{
+//    [textView resignFirstResponder];
+//    
+//}
+
+
+#pragma mark - keyboard notifications allow us to place the keyboard at the proper leves on the screen and react to the keyboard showing in general
+//- (void)showKeyboard:(NSNotification*)note
+//{
+//    NSDictionary* info = [note userInfo];
+//    CGSize kbSize = [[info objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
+//    
+//    UIEdgeInsets contentInsets = UIEdgeInsetsMake(0.0, 0.0, kbSize.height, 0.0);
+//    self.scrollView.contentInset = contentInsets;
+//    self.scrollView.scrollIndicatorInsets = contentInsets;
+//    
+//    // If active text field is hidden by keyboard, scroll it so it's visible
+//    // Your application might not need or want this behavior.
+//    CGRect aRect = self.view.frame;
+//    aRect.size.height -= kbSize.height;
+//    if (!CGRectContainsPoint(aRect, activeView.frame.origin) ) {
+//        CGPoint scrollPoint = CGPointMake(0.0, activeView.frame.origin.y-kbSize.height);
+//        [self.scrollView setContentOffset:scrollPoint animated:YES];
+//    }
+//}
+//
+//// Called when the UIKeyboardWillHideNotification is sent
+//- (void)hideKeyboard:(NSNotification*)note
+//{
+//    UIEdgeInsets contentInsets = UIEdgeInsetsZero;
+//    self.scrollView.contentInset = contentInsets;
+//    self.scrollView.scrollIndicatorInsets = contentInsets;
+//}
+//
+//
+//- (void) setupDoneBtn{
+//    UIBarButtonItem* doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneEditingAction:)];
+//	self.navigationItem.rightBarButtonItem = doneItem;
+//    [self.navigationItem setHidesBackButton:YES];
+//    [self.navigationController setNavigationBarHidden:NO];
+//}
+//
+//
+//
+//- (void)doneEditingAction:(id)sender
+//{
+//	// dismiss the keyboard by removing it as the first responder
+//    [self.navigationController setNavigationBarHidden:YES];
+//    [activeView resignFirstResponder];
+//	self.navigationItem.rightBarButtonItem = nil;
+//    
+//}
+
+
+
+
+#pragma mark swap templates
+
+//- (IBAction)swapTemplate:(id)sender{
+//    TemplatePicker *template = [[TemplatePicker alloc] initWithNibName:@"TemplatePicker" bundle:[NSBundle mainBundle]];
+//    template.delegate = self;        
+//    
+//    [self presentViewController:template animated:YES completion:^(void){
+//        // add in some post view showing stuff here, executes when the view is loaded and animated in
+//        
+//    }];
+//
+//}
+//
+//
+//#pragma mark TemplatePickerDelegate methods
+//
+//- (void) didChooseTemplate:(NSString *)templateType{
+//    [self dismissViewControllerAnimated:YES completion:^{
+////        UIViewController *templateChosen = [self.tempLoader loadEditor:templateType withDelegate:self.delegate withContext:self.context];
+////        NSArray *currentArr = [self.navigationController viewControllers];
+////        NSMutableArray *newArr = [[NSMutableArray alloc] init];
+////        for(int i = 0; i<[currentArr count]; i++){
+////            [newArr addObject:[currentArr objectAtIndex:i]];
+////            
+////        }
+////        
+////        [newArr removeLastObject];
+////        [newArr addObject:templateChosen];
+////        [self.navigationController setViewControllers:newArr animated:YES];
+////        
+//    }];     
+//}
+//
+//- (void) userDidCancel{
+//    [self dismissModalViewControllerAnimated:YES];
+//}
+//
+//- (IBAction)save:(id)sender {
+//    if(self.didMakeChanges){
+//            
+//    }
+//    [self.navigationController popViewControllerAnimated:YES];
+//}
+//
+//- (IBAction)cancel:(id)sender {
+//    [self.navigationController popViewControllerAnimated:YES];
+//}
+@end

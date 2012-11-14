@@ -1,0 +1,322 @@
+   NSManagedObjectContext *_context;
+@property (strong, nonatomic) NSManagedObjectContext* context;// reference to the moc
+
+- (void) addNew{
+    
+    NSNumber* newID = [self getPreviousBuildID];
+    NSInteger change = [newID intValue];
+    change += 1;
+    NSNumber *nID = [NSNumber numberWithInt:change];
+
+    Build *newBuild = (Build*) [NSEntityDescription insertNewObjectForEntityForName:@"Build" inManagedObjectContext:self.managedObjectContext];
+    
+    newBuild.name = @"Build Two";
+    newBuild.creationDate = [NSDate date];
+    newBuild.title = @"Second Build";
+    newBuild.uploaded = NO;
+    newBuild.context = @"Here and now";
+    newBuild.buildID = nID;
+    newBuild.buildDescription = @"this is about the second one";
+    
+    for(NSString *new in [@"tex*bruno*lucky" componentsSeparatedByString:@"*"]){
+        if([new isEqualToString:@"tex"]){
+            TextOnlyMO *t = (TextOnlyMO*)
+            [NSEntityDescription insertNewObjectForEntityForName:@"TextOnlyMO" inManagedObjectContext:self.managedObjectContext];
+            t.screenText = new;
+            t.creationDate = [NSDate date];
+            t.type = @"TextOnlyMO";
+            [newBuild addBuildItemsObject:t];
+        }else if([new isEqualToString:@"bruno"]){
+            TextAndImageMO *tv = (TextAndImageMO*)
+            [NSEntityDescription insertNewObjectForEntityForName:@"TextAndImageMO" inManagedObjectContext:self.managedObjectContext];
+            tv.screenTitle = new;
+            tv.creationDate = [NSDate date];
+            tv.type = @"TextAndImageMO";
+            tv.imagePath = @"";
+            [newBuild addBuildItemsObject:tv];
+            
+        }
+        
+    }
+    
+    NSError *error;
+    if(![self.managedObjectContext save:&error])
+        NSLog(@"%@", [error localizedFailureReason]);
+    
+}
+
+- (void) getBuildMOs{
+    // set the entitiy description to determine which item to go get
+    NSEntityDescription *entityDescription = [NSEntityDescription entityForName:@"Build" inManagedObjectContext:self.managedObjectContext];
+    
+    NSFetchRequest *request = [[NSFetchRequest alloc] init];
+    [request setEntity:entityDescription];
+    
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"(name LIKE[c] 'Build Two')"];
+    [request setPredicate:predicate];
+    NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"name" ascending:NO];
+    [request setSortDescriptors:[NSArray arrayWithObject:sortDescriptor]];
+    
+    NSError *error = nil;
+    
+    
+    NSArray *thisarray = [self.managedObjectContext executeFetchRequest:request error:&error];
+    for(Build *build in thisarray){
+        
+        
+        NSArray *test = [build.buildItems allObjects];// returns an array
+        
+        for(BuildItem *i in test){
+            NSLog(@"type: %@", [i valueForKey:@"type"]);
+        }
+    }
+    if(thisarray == nil){
+        
+        //error handling
+        
+    }
+    
+    
+    
+    
+}
+
+
+- (void) didChooseTemplate:(NSString *)templateType{
+    
+    [self dismissModalViewControllerAnimated:YES];
+    if([templateType isEqualToString:@"textAndImage"]){
+        textAndImage *template = [[textAndImage alloc] initWithNibName:@"textAndImage" bundle:[NSBundle mainBundle]];
+        template.context = self.context;
+        [self.navigationController pushViewController:template animated:YES];
+    }else if([templateType isEqualToString: @"textAndVideo"]){
+        textAndVideo *template = [[textAndVideo alloc] initWithNibName:@"textAndVideo" bundle:[NSBundle mainBundle]];
+        template.context = self.context;
+        [self.navigationController pushViewController:template animated:YES];
+    }else if([templateType isEqualToString: @"textAndAudio"]){
+        textAndAudio *template = [[textAndAudio alloc] initWithNibName:@"textAndAudio" bundle:[NSBundle mainBundle]];
+        template.context = self.context;
+        [self.navigationController pushViewController:template animated:YES];
+    }else if([templateType isEqualToString:@"textOnly"]){
+        textOnly *template = [[textOnly alloc] initWithNibName:@"textOnly" bundle:[NSBundle mainBundle]];
+        template.context = self.context;
+        [self.navigationController pushViewController:template animated:YES];
+    }else if([templateType isEqualToString: @"videoOnly"]){
+        videoOnly *template = [[videoOnly alloc] initWithNibName:@"videoOnly" bundle:[NSBundle mainBundle]];
+        template.context = self.context;
+        [self.navigationController pushViewController:template animated:YES];
+    }else if([templateType isEqualToString:@"audioOnly"]){
+        audioOnly *template = [[audioOnly alloc] initWithNibName:@"audioOnly" bundle:[NSBundle mainBundle]];
+        template.context = self.context;
+        [self.navigationController pushViewController:template animated:YES];
+    }
+    
+}
+
+
+
+
+#define BUILDNUMBER [NSString stringWithFormat:@"build%d", self->buildCount]
+#define BUILDID [NSString stringWithFormat:@"%d", self->buildCount]
+
+- (void) addBuildItem: (NSMutableDictionary*)buildItem atIndex:(NSUInteger*) index{
+    
+    NSInteger last = [self.builds  indexOfObject:[self.builds lastObject]];
+   
+    [self.builds insertObject:buildItem atIndex:last];
+    
+}
+     
+- (void) addBuildToBuildsArray:(NSMutableDictionary *)newBuild
+{
+    [self.builds addObject:newBuild];
+    
+}
+
+
+     
+- (NSMutableDictionary*) getBuild:(NSString*) buildName{
+    
+
+    
+    for(NSMutableDictionary *dict in builds){
+        if([dict valueForKey:@"buildName"] == buildName){
+            return dict;
+        }
+    }
+    
+    return nil;
+}
+
+- (NSMutableDictionary*) getCurrentBuild{
+    NSLog(@"returning from the appdelegate");
+    return currentBuild;
+}
+
+- (NSArray *) getAllBuilds{
+    
+    return builds;
+    
+}
+
+- (void) setCurrentBuildByName:(NSString *)current{
+    
+
+    NSMutableDictionary *newCurrent; 
+    NSUInteger count;
+    count = 0;
+    for(NSMutableDictionary *dict in builds){
+        if([dict valueForKey:@"buildName"] == current){
+            newCurrent = dict;
+            self.currentBuildIndex = count;
+            
+            NSLog(@"count :%d", count);
+            
+        }
+        count++;
+    }
+    self.currentBuild = newCurrent; 
+}
+
+-(NSUInteger) getCurrentBuildIndex{
+    return self.currentBuildIndex;
+}
+
+- (NSMutableArray*) getBuildItems{
+    
+    return [self.currentBuild objectForKey:@"items"];
+}
+
+- (NSMutableDictionary*) getCurrentItem{
+    return [[currentBuild objectForKey:@"items"] objectAtIndex:self.currentItemIndex];
+}
+
+- (void) setCurrentItemIndex:(NSUInteger)itemIndex{
+    self->_currentItemIndex = itemIndex;
+    if(self.currentItemIndex == [[self.currentBuild objectForKey:@"items"] count]){
+ 
+    self->_isNewItem = YES;
+   }else{
+        self->_isNewItem = NO;
+    }
+}
+
+- (NSUInteger) getCurrentItemIndex{
+        return self.currentItemIndex;
+}
+
+- (void) setCurrentItem: (NSMutableDictionary*)item atIndex:(NSUInteger)itemIndex{
+    [[self.currentBuild objectForKey:@"items"] setObject:item atIndex:itemIndex];
+}
+- (NSMutableDictionary*) getBuildItem:(NSUInteger)itemIndex{
+    
+    return [builds objectAtIndex:itemIndex];
+    
+}
+
+- (NSMutableDictionary*) getBuildItemByName:(NSString*) buildName{
+    
+    return [currentBuild objectForKey:buildName];
+    
+}
+
+- (void) setBuildItem:(NSMutableDictionary*) buildItem atIndex: (NSUInteger) itemIndex{
+    
+    [[self.currentBuild objectForKey:@"items"] setObject:buildItem atIndex:itemIndex];
+    
+}
+
+
+- (void) deleteBuildAtIndex:(NSUInteger) buildIndex{
+    [self.builds removeObjectAtIndex:buildIndex];
+    
+}
+
+- (void) deleteBuildItemAtIndex:(NSUInteger) itemIndex{
+    
+    
+}
+
+
+
+
+- (void) addItemsToUploadObjects:(NSMutableArray *)mediaItems{
+    
+    [self.uploadObjects addObject:mediaItems];
+    
+}
+
+- (NSArray*) getUploadObjectsAtIndex:(NSUInteger)uploadIndex{
+    return [self.uploadObjects objectAtIndex:uploadIndex];
+}
+
+- (NSArray*) getBuildTypes{
+    return self->buildItemTypes;
+}
+
+- (BOOL) isNewItem{
+    
+    return self->_isNewItem;
+}
+
+
+
+-(void)buildYourBuilds{
+    
+    
+    // create the build objects
+    BuildObjects *bObj = [[BuildObjects alloc] init];
+    NSMutableDictionary *bObjs = [bObj buildObjBaseWithName:BUILDNUMBER buildTitle:@"This is the first build" buildDescription:@"Here is the description for our first build" buildID:BUILDID];
+    
+    NSMutableDictionary *audioItem = [bObj buildAudioOnlyItem:@"myFirstAudio"];
+    NSMutableDictionary *textItem = [bObj buildTextOnlyItem:@"myFirstText"];
+    NSMutableArray *items = [[NSMutableArray alloc]initWithObjects:audioItem,textItem, nil];
+    if([[bObjs objectForKey:@"items"] isKindOfClass:[NSMutableArray class]]){
+        [bObjs setValue:items forKey:@"items"];
+    }
+ 
+    [self addBuildToBuildsArray:bObjs];
+    
+    self->buildCount ++;
+    
+    
+    NSMutableDictionary *bObjs1 = [bObj buildObjBaseWithName:BUILDNUMBER buildTitle:@"Number 2" buildDescription:@"This is the second build" buildID:BUILDID];
+    
+    NSMutableDictionary *audioItem1 = [bObj buildAudioOnlyItem:@"my2ndAudio"];
+    NSMutableDictionary *textItem1 = [bObj buildTextOnlyItem:@"my2ndText"];
+    NSMutableArray *items1 = [[NSMutableArray alloc]initWithObjects:audioItem1,textItem1, nil];
+    if([[bObjs1 objectForKey:@"items"] isKindOfClass:[NSMutableArray class]]){
+        [bObjs1 setValue:items1 forKey:@"items"];
+    }
+    
+    [self addBuildToBuildsArray:bObjs1];
+    
+    self->buildCount ++;
+    
+    
+    NSMutableDictionary *bObjs2 = [bObj buildObjBaseWithName:BUILDNUMBER buildTitle:@"Third so far" buildDescription:@"This is the third build" buildID:BUILDID];
+    
+    NSMutableDictionary *imageItem2 = [bObj buildTextAndImageItem:@"my3rdImage"];
+    NSString *imagePath = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents/crystal.png"];
+    
+    
+    
+    [imageItem2 setValue:imagePath forKey:@"imagePath"];
+    
+    NSMutableDictionary *videoItem2 = [bObj buildTextAndVideoItem:@"my3rdVideo"];
+    NSString *videoPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents/movie2.mov"];
+    
+    [videoItem2 setValue:videoPath forKey:@"videoPath"];
+
+    
+    NSMutableArray *items2 = [[NSMutableArray alloc]initWithObjects:imageItem2,videoItem2, nil];
+    if([[bObjs2 objectForKey:@"items"] isKindOfClass:[NSMutableArray class]]){
+        [bObjs2 setValue:items2 forKey:@"items"];
+    }
+
+    [self addBuildToBuildsArray:bObjs2];
+    self->buildCount ++;
+
+    NSInteger test = [self.builds count];
+    NSLog(@" after: %@",[NSString stringWithFormat:@"%d", test]);// convert the integer to a string
+}
